@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"bytes"
+	"errors"
 	"regexp"
+	"strings"
 	"os/exec"
 	"io/ioutil"
 
@@ -50,6 +52,14 @@ func resourceDataflow() *schema.Resource {
 			},
 
 			"jobids": &schema.Schema{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"job_states": &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -148,7 +158,6 @@ func resourceDataflowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	
 	//  job successfully submitted, now get the job id
-	//  SAMPLE:  Dataflow SDK version: 1.1.1-SNAPSHOT\nSubmitted job: 2015-10-15_20_14_14-4027401809971669184\nDataflow SDK version: 1.1.1-SNAPSHOT\nSubmitted job: 2015-10-15_20_14_15-9518719588918833764\n
 	jobidRe := regexp.MustCompile("Submitted job: ([0-9-_]+)\n")
 	jobidmatches := jobidRe.FindAllStringSubmatch(stdout.String(), -1)
 	jobids := make([]string, 0)
@@ -156,19 +165,102 @@ func resourceDataflowCreate(d *schema.ResourceData, meta interface{}) error {
 		jobids = append(jobids, match[1])
 	}
 	d.Set("jobids", jobids)
+	d.SetId(d.Get("name").(string))
+
+	err = resourceDataflowRead(d, meta)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func resourceDataflowRead(d *schema.ResourceData, meta interface{}) error {
-	//config := meta.(*Config)
+type dataflowDescription struct {
+	ClientRequestId		string	`json:"clientRequestId"`
+	CreateTime		string	`json:"createTime"`
+	CurrentState		string	`json:"currentState"`
+	CurrentStateTime	string	`json:"currentStateTime"`
+	Id			string	`json:"id"`
+	Name			string	`json:"name"`
+	ProjectId		string	`json:"projectId"`
+	Type			string	`json:"type"`
+}
 
+func resourceDataflowRead(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+        err := init_gcloud(config)
+	if err != nil {
+		return err
+	}
+
+	//  at this point we have verified that our command line jankiness is going to work
+	//  get to it
+	job_states := make([]string, 0)
+	for i := 0; i < d.Get("jobids.#").(int); i++ {
+		key := fmt.Sprintf("jobids.%d", i)
+		job_check_cmd := exec.Command("gcloud", "alpha", "dataflow", "jobs", "describe", d.Get(key).(string), "--format", "json")
+		var stdout, stderr bytes.Buffer
+		job_check_cmd.Stdout = &stdout
+		job_check_cmd.Stderr = &stderr
+		err = job_check_cmd.Run()
+		if err != nil {
+			return err
+		}
+
+		var jobDesc dataflowDescription
+		fmt.Println(stdout.String())
+		err = parseJSON(&jobDesc, stdout.String())
+		if err != nil {
+			return err
+		}
+		job_states = append(job_states, jobDesc.CurrentState)
+	}
+
+	d.Set("job_states", job_states)
 
 	return nil
 }
 
 func resourceDataflowDelete(d *schema.ResourceData, meta interface{}) error {
-	//config := meta.(*Config)
+	config := meta.(*Config)
+        err := init_gcloud(config)
+	if err != nil {
+		return err
+	}
 
+	err = resourceDataflowRead(d, meta)
+	if err != nil {
+		return err
+	}
+
+	//  at this point we have verified that our command line jankiness is going to work
+	//  get to it
+	failedCancel := make([]string, 0)
+	for i := 0; i < d.Get("jobids.#").(int); i++ {
+		jobstatekey := fmt.Sprintf("job_states.%d", i)
+		jobstate := d.Get(jobstatekey).(string)
+		if jobstate == "JOB_STATE_RUNNING" {
+			jobidkey := fmt.Sprintf("jobids.%d", i)
+			job_cancel_cmd := exec.Command("gcloud", "alpha", "dataflow", "jobs", "cancel", d.Get(jobidkey).(string))
+			var stdout, stderr bytes.Buffer
+			job_cancel_cmd.Stdout = &stdout
+			job_cancel_cmd.Stderr = &stderr
+			err = job_cancel_cmd.Run()
+			if err != nil {
+				return err
+			}
+
+			if strings.Contains(stdout.String(), "Failed") {
+				failedCancel = append(failedCancel,d.Get(jobidkey).(string))
+			}
+		}
+	}
+
+	if len(failedCancel) > 0 {
+		errmsg := fmt.Sprintf("Failed to cancel the following jobs: %v", failedCancel)
+		return errors.New(errmsg)
+	}
+
+	d.SetId("")
 	return nil
 }
