@@ -34,6 +34,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			//"google_appengine":                      resourceAppengine(),
 			"google_compute_autoscaler":             resourceComputeAutoscaler(),
 			"google_compute_address":                resourceComputeAddress(),
 			"google_compute_backend_service":        resourceComputeBackendService(),
@@ -55,6 +56,7 @@ func Provider() terraform.ResourceProvider {
 			"google_dns_record_set":                 resourceDnsRecordSet(),
 			"google_compute_instance_group_manager": resourceComputeInstanceGroupManager(),
 			"google_pubsub":			 resourcePubsub(),
+			"google_subscription":			 resourceSubscription(),
 			"google_storage_bucket":                 resourceStorageBucket(),
 			"google_storage_bucket_acl":             resourceStorageBucketAcl(),
 			"google_storage_bucket_object":          resourceStorageBucketObject(),
