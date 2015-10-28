@@ -1,7 +1,8 @@
 package google
 
 import (
-	"github.com/22acacia/terraform-gcloud"
+	"fmt"
+	"google.golang.org/api/pubsub/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -24,45 +25,42 @@ func resourceSubscription() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"subscription_count": &schema.Schema{
-				Type:		schema.TypeInt,
-				Computed:	true,
+			"topic_computed": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
+
 		},
 	}
 }
 
 func resourceSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-        err := terraformGcloud.InitGcloud(config.AccountFile)
+
+	name := fmt.Sprintf("projects/%s/subscriptions/%s", config.Project, d.Get("name").(string))
+	computed_topic_name := fmt.Sprintf("projects/%s/topics/%s", config.Project, d.Get("topic").(string))
+	d.Set("topic_computed", computed_topic_name)
+	subscription := &pubsub.Subscription{Topic: computed_topic_name}
+
+	call := config.clientPubsub.Projects.Subscriptions.Create(name, subscription)
+	res, err := call.Do()
 	if err != nil {
 		return err
 	}
 	
-	fullid, err := terraformGcloud.CreateSubscription(d.Get("name").(string), d.Get("topic").(string))
-	if err != nil {
-		return err
-	}
-
-	d.SetId(fullid)
+	d.SetId(res.Name)
 
 	return nil
 }
 
 func resourceSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-        err := terraformGcloud.InitGcloud(config.AccountFile)
-	if err != nil {
-		return err
-	}
 	
-	fullname, err := terraformGcloud.ReadSubscription(d.Get("name").(string))
+	name := d.Id()
+	call := config.clientPubsub.Projects.Subscriptions.Get(name)
+	_, err := call.Do()
 	if err != nil {
 		return err
-	}
-
-	if fullname == "" {
-		d.SetId("")
 	}
 
 	return nil
@@ -71,15 +69,13 @@ func resourceSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-        err := terraformGcloud.InitGcloud(config.AccountFile)
+
+	name := d.Id()
+	call := config.clientPubsub.Projects.Subscriptions.Delete(name)
+	_, err := call.Do()
 	if err != nil {
-		return err
+		return err 
 	}
 	
-	err = resourceSubscriptionRead(d, meta)
-	if err != nil {
-		return err
-	}
-
-	return terraformGcloud.DeleteSubscription(d.Get("name").(string))
+	return nil
 }
