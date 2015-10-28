@@ -33,7 +33,7 @@ func resourcePubsubCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	
-	fullid, err := terraformGcloud.CreatePubsub(d)
+	fullid, err := terraformGcloud.CreatePubsub(d.Get("name").(string))
 	if err != nil {
 		return err
 	}
@@ -55,12 +55,12 @@ func resourcePubsubRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	
-	exists, subcnt, err := terraformGcloud.ReadPubsub(d)
+	fullid, subcnt, err := terraformGcloud.ReadPubsub(d.Get("name").(string))
 	if err != nil {
 		return err
 	}
 
-	if !exists {
+	if fullid == "" {
 		d.SetId("")
 	}
 
@@ -82,5 +82,5 @@ func resourcePubsubDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return terraformGcloud.DeletePubsub(d)
+	return terraformGcloud.DeletePubsub(d.Get("name").(string), d.Get("subscription_count").(int))
 }

@@ -39,7 +39,7 @@ func resourceSubscriptionCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 	
-	fullid, err := terraformGcloud.CreateSubscription(d)
+	fullid, err := terraformGcloud.CreateSubscription(d.Get("name").(string), d.Get("topic").(string))
 	if err != nil {
 		return err
 	}
@@ -56,12 +56,12 @@ func resourceSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	
-	exists, err := terraformGcloud.ReadSubscription(d)
+	fullname, err := terraformGcloud.ReadSubscription(d.Get("name").(string))
 	if err != nil {
 		return err
 	}
 
-	if !exists {
+	if fullname == "" {
 		d.SetId("")
 	}
 
@@ -81,5 +81,5 @@ func resourceSubscriptionDelete(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	return terraformGcloud.DeleteSubscription(d)
+	return terraformGcloud.DeleteSubscription(d.Get("name").(string))
 }
