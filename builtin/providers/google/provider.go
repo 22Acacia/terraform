@@ -34,7 +34,6 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			//"google_appengine":                      resourceAppengine(),
 			"google_compute_autoscaler":             resourceComputeAutoscaler(),
 			"google_compute_address":                resourceComputeAddress(),
 			"google_compute_backend_service":        resourceComputeBackendService(),
