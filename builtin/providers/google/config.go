@@ -129,6 +129,12 @@ func (c *Config) loadAndValidate() error {
 		return err
 	}
 	c.clientSqlAdmin.UserAgent = userAgent
+	log.Printf("[INFO] Instatiating Google Pubsub Client...")
+	c.clientPubsub, err = pubsub.New(client)
+	if err != nil {
+		return err
+	}
+	c.clientPubsub.UserAgent = userAgent
 
 	log.Printf("[INFO] Instatiating Google Pubsub Client...")
 	c.clientPubsub, err = pubsub.New(client)
