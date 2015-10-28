@@ -19,6 +19,7 @@ import (
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/storage/v1"
+	"google.golang.org/api/pubsub/v1"
 )
 
 // Config is the configuration structure used to instantiate the Google
@@ -32,6 +33,7 @@ type Config struct {
 	clientContainer *container.Service
 	clientDns       *dns.Service
 	clientStorage   *storage.Service
+	clientPubsub	*pubsub.Service
 }
 
 func (c *Config) loadAndValidate() error {
@@ -156,6 +158,13 @@ func (c *Config) loadAndValidate() error {
 		return err
 	}
 	c.clientStorage.UserAgent = userAgent
+
+	log.Printf("[INFO] Instatiating Google Pubsub Client...")
+	c.clientPubsub, err = pubsub.New(client)
+	if err != nil {
+		return err
+	}
+	c.clientPubsub.UserAgent = userAgent
 
 	return nil
 }
