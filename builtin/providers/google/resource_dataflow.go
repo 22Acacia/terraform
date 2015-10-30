@@ -31,10 +31,11 @@ func resourceDataflow() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"staging_bucket": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"optional_args": &schema.Schema{
+				Type:     schema.TypeMap,
+				Optional: true,
 				ForceNew: true,
+				Elem:	  schema.TypeString,
 			},
 
 			"jobids": &schema.Schema{
@@ -56,6 +57,13 @@ func resourceDataflow() *schema.Resource {
 	}
 }
 
+func cleanOptionalArgs(optional_args map[string]interface{}) map[string]string {
+	cleaned_opts := make(map[string]string)
+	for k,v := range  optional_args {
+		cleaned_opts[k] = v.(string)
+	}
+	return cleaned_opts
+}
 
 func resourceDataflowCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
@@ -64,7 +72,8 @@ func resourceDataflowCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	jobids, err := terraformGcloud.CreateDataflow(d.Get("name").(string), d.Get("jarfile").(string), d.Get("class").(string), config.Project, d.Get("staging_bucket").(string))
+	optional_args := cleanOptionalArgs(d.Get("optional_args").(map[string]interface{}))
+	jobids, err := terraformGcloud.CreateDataflow(d.Get("name").(string), d.Get("jarfile").(string), d.Get("class").(string), config.Project, optional_args)
 	if err != nil {
 		return err
 	}
@@ -89,13 +98,16 @@ func resourceDataflowRead(d *schema.ResourceData, meta interface{}) error {
 
 
 	job_states := make([]string, 0)
-	for i := 0; i < d.Get("jobid.#").(int); i++ {
-		jobidkey:= fmt.Sprintf("jobid.%d", i)
-		job_state, err := terraformGcloud.ReadDataflow(d.Get(jobidkey).(string))
-		if err != nil {
-			return err
+	job_cnt := d.Get("jobid.#")
+	if job_cnt != nil {
+		for i := 0; i < job_cnt.(int); i++ {
+			jobidkey:= fmt.Sprintf("jobid.%d", i)
+			job_state, err := terraformGcloud.ReadDataflow(d.Get(jobidkey).(string))
+			if err != nil {
+				return err
+			}
+			job_states = append(job_states, job_state)
 		}
-		job_states = append(job_states, job_state)
 	}
 
 	d.Set("job_states", job_states)
@@ -116,15 +128,18 @@ func resourceDataflowDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	failedCancel := make([]string, 0)
-	for i := 0; i < d.Get("jobid.#").(int); i++ {
-		jobidkey:= fmt.Sprintf("jobid.%d", i)
-		jobstatekey := fmt.Sprintf("jobstate.%d", i)
-		failedjob, err := terraformGcloud.CancelDataflow(d.Get(jobidkey).(string), d.Get(jobstatekey).(string))
-		if err != nil {
-			return err
-		}
-		if failedjob {
-			failedCancel = append(failedCancel, d.Get(jobidkey).(string))
+	job_cnt := d.Get("jobid.#")
+	if job_cnt != nil {
+		for i := 0; i < job_cnt.(int); i++ {
+			jobidkey:= fmt.Sprintf("jobid.%d", i)
+			jobstatekey := fmt.Sprintf("jobstate.%d", i)
+			failedjob, err := terraformGcloud.CancelDataflow(d.Get(jobidkey).(string), d.Get(jobstatekey).(string))
+			if err != nil {
+				return err
+			}
+			if failedjob {
+				failedCancel = append(failedCancel, d.Get(jobidkey).(string))
+			}
 		}
 	}
 
