@@ -6,11 +6,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceSubscription() *schema.Resource {
+func resourcePubsubSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSubscriptionCreate,
-		Read:   resourceSubscriptionRead,
-		Delete: resourceSubscriptionDelete,
+		Create: resourcePubsubSubscriptionCreate,
+		Read:   resourcePubsubSubscriptionRead,
+		Delete: resourcePubsubSubscriptionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -34,7 +34,7 @@ func resourceSubscription() *schema.Resource {
 	}
 }
 
-func resourceSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePubsubSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	name := fmt.Sprintf("projects/%s/subscriptions/%s", config.Project, d.Get("name").(string))
@@ -53,7 +53,7 @@ func resourceSubscriptionCreate(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePubsubSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	
 	name := d.Id()
@@ -67,7 +67,7 @@ func resourceSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 
-func resourceSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePubsubSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	name := d.Id()

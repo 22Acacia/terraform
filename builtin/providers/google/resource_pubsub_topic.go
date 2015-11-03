@@ -6,11 +6,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceTopic() *schema.Resource {
+func resourcePubsubTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicCreate,
-		Read:   resourceTopicRead,
-		Delete: resourceTopicDelete,
+		Create: resourcePubsubTopicCreate,
+		Read:   resourcePubsubTopicRead,
+		Delete: resourcePubsubTopicDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -23,7 +23,7 @@ func resourceTopic() *schema.Resource {
 	}
 }
 
-func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePubsubTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	name := fmt.Sprintf("projects/%s/topics/%s", config.Project, d.Get("name").(string))
@@ -40,7 +40,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePubsubTopicRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	
 	name := d.Id()
@@ -54,7 +54,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 
-func resourceTopicDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePubsubTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	name := d.Id()

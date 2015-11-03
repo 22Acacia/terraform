@@ -8,41 +8,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccSubscriptionCreate(t *testing.T) {
+func TestAccPubsubTopicCreate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSubscriptionDestroy,
+		CheckDestroy: testAccCheckPubsubTopicDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSubscription,
+				Config: testAccPubsubTopic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccSubscriptionExists(
-						"google_subscription.foobar_sub"),
+					testAccPubsubTopicExists(
+						"google_pubsub_topic.foobar"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckPubsubTopicDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "google_subscription" {
+		if rs.Type != "google_pubsub_topic" {
 			continue
 		}
 
 		config := testAccProvider.Meta().(*Config)
-		_, err := config.clientPubsub.Projects.Subscriptions.Get(rs.Primary.ID).Do()
+		_, err := config.clientPubsub.Projects.Topics.Get(rs.Primary.ID).Do()
 		if err != nil {
-			fmt.Errorf("Subscription still present")
+			fmt.Errorf("Topic still present")
 		}
 	}
 
 	return nil
 }
 
-func testAccSubscriptionExists(n string) resource.TestCheckFunc {
+func testAccPubsubTopicExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -53,22 +53,16 @@ func testAccSubscriptionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 		config := testAccProvider.Meta().(*Config)
-		_, err := config.clientPubsub.Projects.Subscriptions.Get(rs.Primary.ID).Do()
+		_, err := config.clientPubsub.Projects.Topics.Get(rs.Primary.ID).Do()
 		if err != nil {
-			fmt.Errorf("Subscription still present")
+			fmt.Errorf("Topic still present")
 		}
 
 		return nil
 	}
 }
 
-const testAccSubscription = `
-resource "google_topic" "foobar_sub" {
-	name = "foobar_sub"
-}
-
-resource "google_subscription" "foobar_sub" {
-	name = "foobar_sub"
-	topic = "${google_topic.foobar_sub.name}"
+const testAccPubsubTopic = `
+resource "google_pubsub_topic" "foobar" {
+	name = "foobar"
 }`
-
