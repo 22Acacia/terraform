@@ -25,11 +25,6 @@ func resourcePubsubSubscription() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"topic_computed": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 		},
 	}
 }
@@ -39,7 +34,6 @@ func resourcePubsubSubscriptionCreate(d *schema.ResourceData, meta interface{}) 
 
 	name := fmt.Sprintf("projects/%s/subscriptions/%s", config.Project, d.Get("name").(string))
 	computed_topic_name := fmt.Sprintf("projects/%s/topics/%s", config.Project, d.Get("topic").(string))
-	d.Set("topic_computed", computed_topic_name)
 	subscription := &pubsub.Subscription{Topic: computed_topic_name}
 
 	call := config.clientPubsub.Projects.Subscriptions.Create(name, subscription)
