@@ -40,7 +40,10 @@ func testAccCheckResourceControllerDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Failed to read resource controller list")
 		}
+		fmt.Println("tests, woo")
 	}
+
+	fmt.Println("party")
 
 	return nil
 }
