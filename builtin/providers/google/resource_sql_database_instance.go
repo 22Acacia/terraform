@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"google.golang.org/api/sqladmin/v1beta4"
+	"google.golang.org/api/googleapi"
 )
 
 func resourceSqlDatabaseInstance() *schema.Resource {
@@ -462,6 +463,13 @@ func resourceSqlDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) e
 		d.Get("name").(string)).Do()
 
 	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 404 {
+			// The resource doesn't exist anymore
+			d.SetId("")
+
+			return nil
+		}
+
 		return fmt.Errorf("Error retrieving instance %s: %s",
 			d.Get("name").(string), err)
 	}
