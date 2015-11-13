@@ -1,7 +1,7 @@
 package google
 
 import (
-	"fmt"
+	"log"
 	"github.com/22acacia/terraform-gcloud"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -62,23 +62,18 @@ func resourceReplicaControllerCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	err = terraformGcloud.InitKubectl(d.Get("container_name").(string), d.Get("zone").(string)
+	err = terraformGcloud.InitKubectl(d.Get("container_name").(string), d.Get("zone").(string))
 	if err != nil {
 		return err
 	}
 
 	optional_args := cleanOptionalArgs(d.Get("optional_args").(map[string]interface{}))
-	uid, err := terraformGcloud.CreateRC(d.Get("name").(string), d.Get("docker_image").(string), optional_args)
+	uid, err := terraformGcloud.CreateKubeRC(d.Get("name").(string), d.Get("docker_image").(string), optional_args)
 	if err != nil {
 		return err
 	}
 
 	d.SetId(uid)
-
-	err = resourceReplicaControllerRead(d, meta)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -90,12 +85,12 @@ func resourceReplicaControllerRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	err = terraformGcloud.InitKubectl(d.Get("container_name").(string), d.Get("zone").(string)
+	err = terraformGcloud.InitKubectl(d.Get("container_name").(string), d.Get("zone").(string))
 	if err != nil {
 		return err
 	}
 
-	pod_count, err := terraformGcloud.ReadRC(d.Get("name").(string))
+	pod_count, err := terraformGcloud.ReadKubeRC(d.Get("name").(string))
 	if err != nil {
 		return err
 	}
@@ -115,12 +110,12 @@ func resourceReplicaControllerDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	err = terraformGcloud.InitKubectl(d.Get("container_name").(string), d.Get("zone").(string)
+	err = terraformGcloud.InitKubectl(d.Get("container_name").(string), d.Get("zone").(string))
 	if err != nil {
 		return err
 	}
 
-	err := terraformGcloud.DeleteRC(d.Get("name").(string),) 
+	err = terraformGcloud.DeleteKubeRC(d.Get("name").(string),) 
 	if err != nil {
 		return err
 	}

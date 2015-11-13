@@ -3,9 +3,7 @@ package google
 import (
 	"os"
 	"fmt"
-	"time"
 	"testing"
-	"math/rand"
 
 	"github.com/22acacia/terraform-gcloud"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -38,7 +36,7 @@ func testAccCheckResourceControllerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := terraformGcloud.ReadRC(rs.Primary.Attributes["name"])
+		_, err := terraformGcloud.ReadKubeRC(rs.Primary.Attributes["name"])
 		if err == nil {
 			return fmt.Errorf("Failed to read resource controller list")
 		}
@@ -59,7 +57,7 @@ func testAccResourceControllerExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		count, err := terraformGcloud.ReadRC(rs.Primary.Attributes["name"])
+		count, err := terraformGcloud.ReadKubeRC(rs.Primary.Attributes["name"])
 		if err != nil {
 			return fmt.Errorf("Command line read has errored: %q with rs.Primary hash: %q", err, rs.Primary)
 		}
