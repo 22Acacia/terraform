@@ -36,7 +36,7 @@ func testAccCheckResourceControllerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := terraformGcloud.ReadKubeRC(rs.Primary.Attributes["name"])
+		_, _, err := terraformGcloud.ReadKubeRC(rs.Primary.Attributes["name"], "")
 		if err == nil {
 			return fmt.Errorf("Failed to read resource controller list")
 		}
@@ -60,7 +60,7 @@ func testAccResourceControllerExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		count, err := terraformGcloud.ReadKubeRC(rs.Primary.Attributes["name"])
+		count, _, err := terraformGcloud.ReadKubeRC(rs.Primary.Attributes["name"], "")
 		if err != nil {
 			return fmt.Errorf("Command line read has errored: %q with rs.Primary hash: %q", err, rs.Primary)
 		}
