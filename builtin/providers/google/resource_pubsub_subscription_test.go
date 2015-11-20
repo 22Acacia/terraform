@@ -18,7 +18,7 @@ func TestAccPubsubSubscriptionCreate(t *testing.T) {
 			resource.TestStep{
 				Config: testAccPubsubSubscription,
 				Check: resource.ComposeTestCheckFunc(
-					testAccPubsubScriptionExists(
+					testAccPubsubSubscriptionExists(
 						"google_pubsub_subscription.foobar_sub"),
 				),
 			},
