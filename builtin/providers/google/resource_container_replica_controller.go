@@ -59,7 +59,7 @@ func resourceContainerReplicaController() *schema.Resource {
 	}
 }
 
-func cleanOptionalArgs(optional_args map[string]interface{}) map[string]string {
+func rcCleanOptionalArgs(optional_args map[string]interface{}) map[string]string {
 	cleaned_opts := make(map[string]string)
 	for k,v := range  optional_args {
 		cleaned_opts[k] = v.(string)
@@ -79,7 +79,7 @@ func resourceContainerReplicaControllerCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	optional_args := cleanOptionalArgs(d.Get("optional_args").(map[string]interface{}))
+	optional_args := rcCleanOptionalArgs(d.Get("optional_args").(map[string]interface{}))
 	uid, err := terraformGcloud.CreateKubeRC(d.Get("name").(string), d.Get("docker_image").(string), d.Get("external_port").(string), optional_args)
 	if err != nil {
 		return err
