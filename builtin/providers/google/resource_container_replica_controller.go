@@ -69,7 +69,7 @@ func cleanOptionalArgs(optional_args map[string]interface{}) map[string]string {
 
 func resourceContainerReplicaControllerCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-        err := terraformGcloud.InitGcloud(config.AccountFile)
+        err := terraformGcloud.InitGcloud(config.Credentials)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func resourceContainerReplicaControllerCreate(d *schema.ResourceData, meta inter
 
 func resourceContainerReplicaControllerRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-        err := terraformGcloud.InitGcloud(config.AccountFile)
+        err := terraformGcloud.InitGcloud(config.Credentials)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func resourceContainerReplicaControllerRead(d *schema.ResourceData, meta interfa
 
 func resourceContainerReplicaControllerDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-        err := terraformGcloud.InitGcloud(config.AccountFile)
+        err := terraformGcloud.InitGcloud(config.Credentials)
 	if err != nil {
 		return err
 	}
