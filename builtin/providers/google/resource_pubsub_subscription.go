@@ -25,17 +25,26 @@ func resourcePubsubSubscription() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"pushAttributes": &schema.Schema{
-				Type:     schema.TypeMap,
+			"pushConfig": &schema.Schema{
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				Elem:     schema.TypeString,
-			},
+				Elem:     &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attributes": &schema.Schema{
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+							Elem:     schema.TypeString,
+						},
 
-			"pushEndpoint": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+						"pushEndpoint": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 
 			"topic": &schema.Schema{
@@ -65,16 +74,23 @@ func resourcePubsubSubscriptionCreate(d *schema.ResourceData, meta interface{}) 
 	//  process optional parameters
 	var ackDeadlineSeconds int64
 	ackDeadlineSeconds = 10
-	if  d.Get("ackDeadlineSeconds") != "" {
-		ackDeadlineSeconds = int64(d.Get("ackDeadlineSeconds").(int))
+	if v, ok := d.GetOk("ackDeadlineSeconds"); ok {
+		ackDeadlineSeconds = v.(int64)
 	}
 
 	var subscription *pubsub.Subscription
-	if d.Get("pushEndpoint").(string) != "" {
-		pushAttributes := d.Get("pushAttributes").(map[string]interface{})
+	if v, ok := d.GetOk("pushConfig"); ok {
+		pushConfigs := v.([]interface{})
+
+		if len(pushConfigs) > 1 {
+			return fmt.Errorf("At most one PushConfig is allowed per subscription!")
+		}
+
+		pushConfig := pushConfigs[0].(map[string]interface{})
+		pushAttributes := pushConfig["attributes"].(map[string]interface{})
 		pushAttributesClean := cleanAdditionalArgs(pushAttributes)
-		pushConfig := &pubsub.PushConfig{Attributes: pushAttributesClean, PushEndpoint: d.Get("pushEndpoint").(string)}
-		subscription = &pubsub.Subscription{AckDeadlineSeconds: ackDeadlineSeconds, Topic: computed_topic_name, PushConfig: pushConfig}
+		pubsubPushConfig := &pubsub.PushConfig{Attributes: pushAttributesClean, PushEndpoint: pushConfig["pushEndpoint"].(string)}
+		subscription = &pubsub.Subscription{AckDeadlineSeconds: ackDeadlineSeconds, Topic: computed_topic_name, PushConfig: pubsubPushConfig}
 	}  else {
 		subscription = &pubsub.Subscription{AckDeadlineSeconds: ackDeadlineSeconds, Topic: computed_topic_name}
 	}
