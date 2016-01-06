@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"google.golang.org/api/storage/v1"
+	"google.golang.org/api/googleapi"
 )
 
 func resourceStorageObjectAcl() *schema.Resource {
@@ -134,6 +135,13 @@ func resourceStorageObjectAclRead(d *schema.ResourceData, meta interface{}) erro
 		res, err := config.clientStorage.ObjectAccessControls.List(bucket, object).Do()
 
 		if err != nil {
+			if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 404 {
+				// The resource doesn't exist anymore
+				d.SetId("")
+
+				return nil
+			}
+
 			return err
 		}
 

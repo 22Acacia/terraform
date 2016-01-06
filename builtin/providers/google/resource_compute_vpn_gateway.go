@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 )
 
 func resourceComputeVpnGateway() *schema.Resource {
@@ -88,6 +89,13 @@ func resourceComputeVpnGatewayRead(d *schema.ResourceData, meta interface{}) err
 	vpnGateway, err := vpnGatewaysService.Get(project, region, name).Do()
 
 	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 404 {
+			// The resource doesn't exist anymore
+			d.SetId("")
+
+			return nil
+		}
+
 		return fmt.Errorf("Error Reading VPN Gateway %s: %s", name, err)
 	}
 
