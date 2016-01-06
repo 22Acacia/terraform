@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 
-	"google.golang.org/api/storage/v1"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/storage/v1"
 )
 
 func resourceStorageBucketAcl() *schema.Resource {
